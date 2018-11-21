@@ -1,56 +1,68 @@
-pipeline {
-    agent any
+call {
+    user_unique_name = "ecs-workshop"
+    github_user_or_org = "ecsworkshop2018"
+}
 
-    options {
-        disableConcurrentBuilds()
-    }
+def call(body) {
 
-    environment {
-        USER_UNIQUE_NAME = "ecs-workshop"
-    }
+    def config = [:]
+    body.resolveStrategy = Closure.DELEGATE_FIRST
+    body.delegate = config
+    body()
 
-    stages {
-        stage("terraform-plan-and-apply") {
-            steps {
-                script {
-                    MAPPING = readYaml(file: "mapping.yaml")
-                    ENV = MAPPING.env
-                    VPC = MAPPING.vpc
-                    ALB = MAPPING.alb
-                    MAPPING.clusters.each { cluster ->
-                        def clusterName = cluster.cluster_name
-                        def serviceConfigs = cluster.services.collect { service -> getServiceConfig(service) }
-                        def instanceType = getInstanceType(getLargestContainerMemory(serviceConfigs))
+    USER_UNIQUE_NAME = config.user_unique_name
+    GITHUB_USER_OR_ORG = config.github_user_or_org
 
-                        sh 'rm -rf terraform-repo'
-                        dir('terraform-repo') {
-                            git url: 'git@github.com:ecsworkshop2018/bifrost-infra-provisioner.git'
+    pipeline {
+        agent any
 
-                            dir('terraform/cluster-and-services') {
-                                setupPythonVirtualEnv()
+        options {
+            disableConcurrentBuilds()
+        }
 
-                                def backendConfigPath = populateBackendConfigFile(
-                                        ENV,
-                                        USER_UNIQUE_NAME,
-                                        clusterName
-                                )
+        stages {
+            stage("terraform-plan-and-apply") {
+                steps {
+                    script {
+                        MAPPING = readYaml(file: "mapping.yaml")
+                        ENV = MAPPING.env
+                        VPC = MAPPING.vpc
+                        ALB = MAPPING.alb
+                        MAPPING.clusters.each { cluster ->
+                            def clusterName = cluster.cluster_name
+                            def serviceConfigs = cluster.services.collect { service -> getServiceConfig(service) }
+                            def instanceType = getInstanceType(getLargestContainerMemory(serviceConfigs))
 
-                                populateTerraformTfvars(
-                                        ENV,
-                                        VPC,
-                                        ALB,
-                                        USER_UNIQUE_NAME,
-                                        clusterName,
-                                        instanceType,
-                                        serviceConfigs,
-                                        backendConfigPath
-                                )
+                            sh 'rm -rf terraform-repo'
+                            dir('terraform-repo') {
+                                git url: "git@github.com:${GITHUB_USER_OR_ORG}/bifrost-infra-provisioner.git"
 
-                                terraformPlan(backendConfigPath)
+                                dir('terraform/cluster-and-services') {
+                                    setupPythonVirtualEnv()
 
-                                terraformApply()
+                                    def backendConfigPath = populateBackendConfigFile(
+                                            ENV,
+                                            USER_UNIQUE_NAME,
+                                            clusterName
+                                    )
 
-                                commitBackendConfig(backendConfigPath)
+                                    populateTerraformTfvars(
+                                            ENV,
+                                            VPC,
+                                            ALB,
+                                            USER_UNIQUE_NAME,
+                                            clusterName,
+                                            instanceType,
+                                            serviceConfigs,
+                                            backendConfigPath
+                                    )
+
+                                    terraformPlan(backendConfigPath)
+
+                                    terraformApply()
+
+                                    commitBackendConfig(backendConfigPath)
+                                }
                             }
                         }
                     }

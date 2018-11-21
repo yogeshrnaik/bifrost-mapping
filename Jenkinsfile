@@ -138,7 +138,9 @@ def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instance
         terraformListVar("service_health_checks", serviceConfigs.collect { serviceConfig -> serviceConfig.health_check }),
         terraformListVar("service_memories", serviceConfigs.collect { serviceConfig -> serviceConfig.memory }),
         terraformListVar("service_cpus", serviceConfigs.collect { serviceConfig -> serviceConfig.cpu }),
-        terraformListVar("docker_images", serviceConfigs.collect { serviceConfig -> serviceConfig.docker_image })
+        terraformListVar("docker_images", serviceConfigs.collect { serviceConfig -> serviceConfig.docker_image }),
+        terraformListVar("service_min_instances", serviceConfigs.collect { serviceConfig -> serviceConfig.min_instances }),
+        terraformListVar("service_max_instances", serviceConfigs.collect { serviceConfig -> serviceConfig.max_instances })
     ]
     writeFile encoding: "UTF-8", file: "${varFile}", text: vars.join("\n")
 }

@@ -46,9 +46,9 @@ pipeline {
 
                                 terraformPlan(backendConfigFile)
 
-                                //terraformApply()
+                                terraformApply()
 
-                                //commitBackendConfig(backendConfigFile)
+                                commitBackendConfig(backendConfigFile)
                             }
                         }
                     }

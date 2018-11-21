@@ -20,10 +20,7 @@ pipeline {
                     MAPPING.clusters.each { cluster ->
                         def clusterName = cluster.cluster_name
                         def serviceConfigs = cluster.services.collect { service -> getServiceConfig(service) }
-                        def instanceType = getInstanceType(
-                                getMininumInstanceCPU(serviceConfigs),
-                                getMininumInstanceMemory(serviceConfigs)
-                        )
+                        def instanceType = getInstanceType(getLargestContainerMemory(serviceConfigs))
 
                         sh 'rm -rf terraform-repo'
                         dir('terraform-repo') {
@@ -72,15 +69,19 @@ def setupPythonVirtualEnv() {
        """
 }
 
-def getInstanceType(minCpu, minMemory) {
-    return "t3.micro"
+String getInstanceType(largestContainerMemory) {
+    memoryForOS = 100
+    capacityFor2ContainersAndOS = (largestContainerMemory * 2) + memoryForOS
+    if ( capacityFor2ContainersAndOS < 512 ) {
+        return "t3.nano"
+    } else if (capacityFor2ContainersAndOS < 1024 ) {
+        return "t3.micro"
+    } else {
+        return "t3.small"
+    }
 }
 
-int getMininumInstanceCPU(serviceConfigs) {
-    return max(serviceConfigs.collect { serviceConfig -> serviceConfig.cpu })
-}
-
-int getMininumInstanceMemory(serviceConfigs) {
+int getLargestContainerMemory(serviceConfigs) {
     return max(serviceConfigs.collect { serviceConfig -> serviceConfig.memory })
 }
 

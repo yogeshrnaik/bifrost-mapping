@@ -146,7 +146,9 @@ def commitBackendConfig(backendConfigPath) {
     sh """
         git add ${backendConfigPath}/backend.config
         git add ${backendConfigPath}/terraform.tfvars
-        git commit -m "Backend config for applied terraform"
-        git push origin master
+        if [ ! \$(git status -s --untracked-files=no | wc -l) -eq 0 ]; then
+            git commit -m "Backend config for applied terraform"
+            git push origin master
+        fi
        """
 }

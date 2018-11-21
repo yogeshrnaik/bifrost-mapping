@@ -20,7 +20,6 @@ pipeline {
                                 getMininumInstanceCPU(serviceConfigs),
                                 getMininumInstanceMemory(serviceConfigs)
                         )
-                        print instanceType
 
                         sh 'rm -rf terraform-repo'
                         dir('terraform-repo') {
@@ -99,23 +98,37 @@ def populateBackendConfigFile(env, userUniqueName, clusterName) {
     backendConfigPath = "backend-configs/${env}-${userUniqueName}-${clusterName}"
     sh "mkdir -p ${backendConfigPath}"
     backendConfigFile = "${backendConfigPath}/backend.config"
-    sh """
-        echo "bucket = \\"${stateBucket}\\"" > ${backendConfigFile}
-        echo "key    = \\"${userUniqueName}-${clusterName}-cluster.tfstate\\"" >> ${backendConfigFile}
-       """
+    backenConfigs = [
+        terraformStringVar("bucket", stateBucket),
+        terraformStringVar("key", "${userUniqueName}-${clusterName}-cluster.tfstate")
+    ]
+    writeFile encoding: "UTF-8", file: "${backendConfigFile}", text: backenConfigs.join("\n")
     return "${backendConfigPath}"
 }
 
-def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instanceType, backendConfigPath) {
+def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instanceType, serviceConfigs, backendConfigPath) {
     varFile = "${backendConfigPath}/terraform.tfvars"
-    sh """
-        echo "env           = \\"${env}\\"" > ${varFile}
-        echo "vpc_name      = \\"${vpc}\\"" >> ${varFile}
-        echo "alb_name      = \\"${alb}\\"" >> ${varFile}
-        echo "unique_name   = \\"${userUniqueName}\\"" >> ${varFile}
-        echo "cluster_name  = \\"${clusterName}\\"" >> ${varFile}
-        echo "instance_type = \\"${instanceType}\\"" >> ${varFile}
-       """
+    vars = [
+        terraformStringVar("env", env),
+        terraformStringVar("vpc_name", vpc),
+        terraformStringVar("alb_name", alb),
+        terraformStringVar("unique_name", userUniqueName),
+        terraformStringVar("cluster_name", clusterName),
+        terraformStringVar("instance_type", instanceType),
+        terraformListVar("service_names", serviceConfigs.collect { serviceConfig -> serviceConfig.name }),
+        terraformListVar("service_memories", serviceConfigs.collect { serviceConfig -> serviceConfig.memory }),
+        terraformListVar("service_cpus", serviceConfigs.collect { serviceConfig -> serviceConfig.cpu }),
+        terraformListVar("docker_images", serviceConfigs.collect { serviceConfig -> serviceConfig.docker_image })
+    ]
+    writeFile encoding: "UTF-8", file: "${varFile}", text: vars.join("\n")
+}
+
+def terraformStringVar(key, value) {
+    return "${key} = " + """ "${value}" """
+}
+
+def terraformListVar(key, values) {
+    return "${key} = [" + values.collect({ value -> """ "${value}" """ }).join(",") + "]"
 }
 
 def terraformPlan(backendConfigPath) {

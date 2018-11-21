@@ -29,7 +29,7 @@ pipeline {
                             dir('terraform/cluster-and-services') {
                                 setupPythonVirtualEnv()
 
-                                def backendConfigFile = populateBackendConfigFile(
+                                def backendConfigPath = populateBackendConfigFile(
                                         ENV,
                                         USER_UNIQUE_NAME,
                                         clusterName
@@ -41,14 +41,15 @@ pipeline {
                                         ALB,
                                         USER_UNIQUE_NAME,
                                         clusterName,
-                                        instanceType
+                                        instanceType,
+                                        backendConfigPath
                                 )
 
-                                terraformPlan(backendConfigFile)
+                                terraformPlan(backendConfigPath)
 
                                 terraformApply()
 
-                                commitBackendConfig(backendConfigFile)
+                                commitBackendConfig(backendConfigPath)
                             }
                         }
                     }
@@ -95,17 +96,18 @@ def getServiceConfig(service) {
 
 def populateBackendConfigFile(env, userUniqueName, clusterName) {
     stateBucket = "ecs-workshop-terraform-state-${env}"
-    sh "mkdir -p backend-configs"
-    backendConfigFile = "backend-configs/${stateBucket}-${userUniqueName}-${clusterName}"
+    backendConfigPath = "backend-configs/${env}-${userUniqueName}-${clusterName}"
+    sh "mkdir -p ${backendConfigPath}"
+    backendConfigFile = "${backendConfigPath}/backend.config"
     sh """
         echo "bucket = \\"${stateBucket}\\"" > ${backendConfigFile}
         echo "key    = \\"${userUniqueName}-${clusterName}-cluster.tfstate\\"" >> ${backendConfigFile}
        """
-    return "${backendConfigFile}"
+    return "${backendConfigPath}"
 }
 
-def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instanceType) {
-    varFile = "terraform.tfvars"
+def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instanceType, backendConfigPath) {
+    varFile = "${backendConfigPath}/terraform.tfvars"
     sh """
         echo "env           = \\"${env}\\"" > ${varFile}
         echo "vpc_name      = \\"${vpc}\\"" >> ${varFile}
@@ -116,14 +118,14 @@ def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instance
        """
 }
 
-def terraformPlan(backendConfigFile) {
+def terraformPlan(backendConfigPath) {
     wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
         sh """
             . venv/bin/activate
             TF_IN_AUTOMATION=true 
             terraform get -update=true
-            terraform init -input=false -backend-config=${backendConfigFile}
-            terraform plan -input=false -out=terraform.tfplan
+            terraform init -input=false -backend-config=${backendConfigPath}/backend.config
+            terraform plan -input=false -out=terraform.tfplan -var-file=${backendConfigPath}/terraform.tfvars
             deactivate
            """
     }
@@ -140,9 +142,10 @@ def terraformApply() {
     }
 }
 
-def commitBackendConfig(backendConfigFile) {
+def commitBackendConfig(backendConfigPath) {
     sh """
-        git add ${backendConfigFile}
+        git add ${backendConfigPath}/backend.config
+        git add ${backendConfigPath}/terraform.tfvars
         git commit -m "Backend config for applied terraform"
         git push origin master
        """

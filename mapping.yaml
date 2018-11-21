@@ -5,5 +5,5 @@ clusters:
   - cluster_name: "asgard"
     services:
       - service_repo: "git@github.com:ecsworkshop2018/odin.git"
-        service_config_path: "odin/config.yaml"
+        service_config_path: "service-config/config.yaml"
         docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/prashant/odin:9bdfc7c2e712c2562f5eb2feda90d2c8fd663098"

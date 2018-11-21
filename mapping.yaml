@@ -6,4 +6,4 @@ clusters:
     services:
       - service_repo: "git@github.com:ecsworkshop2018/odin.git"
         service_config_path: "odin/config.yaml"
-        docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/prashant/odin:4d650a71f6c473d1a6411b8bac635f7b7061519c"
+        docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/prashant/odin:9bdfc7c2e712c2562f5eb2feda90d2c8fd663098"

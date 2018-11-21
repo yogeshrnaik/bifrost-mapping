@@ -117,6 +117,8 @@ def populateTerraformTfvars(env, vpc, alb, userUniqueName, clusterName, instance
         terraformStringVar("cluster_name", clusterName),
         terraformStringVar("instance_type", instanceType),
         terraformListVar("service_names", serviceConfigs.collect { serviceConfig -> serviceConfig.name }),
+        terraformListVar("service_contexts", serviceConfigs.collect { serviceConfig -> serviceConfig.context }),
+        terraformListVar("service_health_checks", serviceConfigs.collect { serviceConfig -> serviceConfig.health_check }),
         terraformListVar("service_memories", serviceConfigs.collect { serviceConfig -> serviceConfig.memory }),
         terraformListVar("service_cpus", serviceConfigs.collect { serviceConfig -> serviceConfig.cpu }),
         terraformListVar("docker_images", serviceConfigs.collect { serviceConfig -> serviceConfig.docker_image })

@@ -89,7 +89,7 @@ def getServiceConfig(service) {
     dir('service-repo') {
         git url: service.service_repo
         serviceConfig = readYaml(file: service.service_config_path)
-        serviceConfig.dockerImage = service.docker_image
+        serviceConfig.docker_image = service.docker_image
         return serviceConfig
     }
 }

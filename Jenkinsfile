@@ -41,6 +41,7 @@ pipeline {
                                         USER_UNIQUE_NAME,
                                         clusterName,
                                         instanceType,
+                                        serviceConfigs,
                                         backendConfigPath
                                 )
 

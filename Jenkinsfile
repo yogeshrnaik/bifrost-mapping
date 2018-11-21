@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+    }
+
     environment {
         USER_UNIQUE_NAME = "ecs-workshop"
     }

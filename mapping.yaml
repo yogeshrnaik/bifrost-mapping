@@ -3,10 +3,4 @@ vpc: "dev-ecs-workshop"
 alb: "ecs-workshop-dev-alb"
 clusters:
   - cluster_name: "asgard"
-    services:
-      - service_repo: "git@github.com:ecsworkshop2018/odin.git"
-        service_config_path: "service-config/config.yaml"
-        docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/ecs-workshop/odin:6b81cb13ff0849591e0716ba46244fe949a165f5"
-      - service_repo: "git@github.com:ecsworkshop2018/thor.git"
-        service_config_path: "service-config/config.yaml"
-        docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/ecs-workshop/thor:b561e399ab8d457dfc47d89d8e1fb4924d49d7de"
+    services: []

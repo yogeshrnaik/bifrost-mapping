@@ -1,6 +1,6 @@
 env: "dev"
 vpc: "dev-ecs-workshop"
-alb: "ecs-workshop-dev-alb"
+alb: "yogesh-dev-alb"
 clusters:
   - cluster_name: "asgard"
     services: []

@@ -2,5 +2,7 @@ env: "dev"
 vpc: "dev-ecs-workshop"
 alb: "yogesh-dev-alb"
 clusters:
-  - cluster_name: "asgard"
-    services: []
+  - cluster_name: "asgard"    services:
+      - service_repo: "git@github.com:yogeshrnaik/odin.git"
+        service_config_path: "service-config/config.yaml"
+        docker_image: "738035286324.dkr.ecr.us-east-1.amazonaws.com/yogesh/odin:cdd76905e82a46371811215533a4c34aa06864e1"
